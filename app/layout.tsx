@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "Shadcn Phone Input",
 		description: "Display content divided into a steps sequence",
-		url: "https://shadcn-phone-input.vercel.app/",
+		url: "https://shadcn-phone-input-five.vercel.app/",
 	},
 };
 
