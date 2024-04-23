@@ -133,7 +133,7 @@ export function PhoneInput({
 
 	return (
 		<div className={cn("flex gap-2", className)}>
-			<Popover open={openCommand} onOpenChange={setOpenCommand}>
+			<Popover open={openCommand} onOpenChange={setOpenCommand} modal={true}>
 				<PopoverTrigger asChild>
 					<Button
 						variant="outline"
@@ -149,13 +149,17 @@ export function PhoneInput({
 						<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="w-max p-0" align="start">
+				<PopoverContent className="p-0 w-max" align="start">
 					<Command>
 						<CommandInput placeholder="Search country..." />
 						<CommandList>
 							<CommandEmpty>No country found.</CommandEmpty>
-							<CommandGroup>
-								<ScrollArea className="h-full max-h-[280px]">
+							<ScrollArea
+								className={
+									"[&>[data-radix-scroll-area-viewport]]:max-h-[300px]"
+								}
+							>
+								<CommandGroup>
 									{countries.map((country) => {
 										return (
 											<CommandItem
@@ -192,8 +196,8 @@ export function PhoneInput({
 											</CommandItem>
 										);
 									})}
-								</ScrollArea>
-							</CommandGroup>
+								</CommandGroup>
+							</ScrollArea>
 						</CommandList>
 					</Command>
 				</PopoverContent>
