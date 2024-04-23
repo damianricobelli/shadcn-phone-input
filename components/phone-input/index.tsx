@@ -27,6 +27,7 @@ import parsePhoneNumberFromString, {
 import { Check, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import { countries } from "./countries";
+import { useStateHistory } from "./use-state-history";
 
 export type Country = (typeof countries)[number];
 
@@ -44,7 +45,7 @@ export type PhoneData = {
 	type?: NumberType;
 };
 
-interface PhoneInputProps extends React.ComponentPropsWithRef<"input"> {
+interface PhoneInputProps extends React.ComponentPropsWithoutRef<"input"> {
 	value?: string;
 	defaultCountry?: CountryCode;
 }
@@ -69,7 +70,7 @@ export function getPhoneData(phone: string): PhoneData {
 }
 
 export function PhoneInput({
-	value,
+	value: valueProp,
 	defaultCountry = "US",
 	className,
 	id,
@@ -79,6 +80,8 @@ export function PhoneInput({
 	const asYouType = new AsYouType();
 
 	const inputRef = React.useRef<HTMLInputElement>(null);
+
+	const [value, handlers, history] = useStateHistory(valueProp);
 
 	if (value && value.length > 0) {
 		defaultCountry =
@@ -114,6 +117,7 @@ export function PhoneInput({
 		const number = asYouType.getNumber();
 		setCountryCode(number?.country || defaultCountry);
 		event.currentTarget.value = formattedValue;
+		handlers.set(formattedValue);
 	};
 
 	const handleOnPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
@@ -128,6 +132,21 @@ export function PhoneInput({
 			const number = asYouType.getNumber();
 			setCountryCode(number?.country || defaultCountry);
 			event.currentTarget.value = formattedValue;
+			handlers.set(formattedValue);
+		}
+	};
+
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+			handlers.back();
+			if (
+				inputRef.current &&
+				history.current > 0 &&
+				history.history[history.current - 1] !== undefined
+			) {
+				event.preventDefault();
+				inputRef.current.value = history.history[history.current - 1] || "";
+			}
 		}
 	};
 
@@ -168,6 +187,7 @@ export function PhoneInput({
 												onSelect={() => {
 													if (inputRef.current) {
 														inputRef.current.value = `+${country.phone_code}`;
+														handlers.set(`+${country.phone_code}`);
 														inputRef.current.focus();
 													}
 													setCountryCode(country.iso2 as CountryCode);
@@ -212,6 +232,7 @@ export function PhoneInput({
 				defaultValue={initializeDefaultValue()}
 				onInput={handleOnInput}
 				onPaste={handleOnPaste}
+				onKeyDown={handleKeyDown}
 				required={required}
 				aria-required={required}
 				{...rest}
