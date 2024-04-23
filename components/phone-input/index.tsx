@@ -46,7 +46,7 @@ export type PhoneData = {
 
 interface PhoneInputProps extends React.ComponentPropsWithRef<"input"> {
 	value?: string;
-	initialCountryCode?: CountryCode;
+	defaultCountry?: CountryCode;
 }
 
 export function getPhoneData(phone: string): PhoneData {
@@ -70,7 +70,7 @@ export function getPhoneData(phone: string): PhoneData {
 
 export function PhoneInput({
 	value,
-	initialCountryCode = "US",
+	defaultCountry = "US",
 	className,
 	id,
 	required = true,
@@ -81,13 +81,14 @@ export function PhoneInput({
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
 	if (value && value.length > 0) {
-		initialCountryCode =
-			parsePhoneNumberFromString(value)?.getPossibleCountries()[0] || "US";
+		defaultCountry =
+			parsePhoneNumberFromString(value)?.getPossibleCountries()[0] ||
+			defaultCountry;
 	}
 
 	const [openCommand, setOpenCommand] = React.useState(false);
 	const [countryCode, setCountryCode] =
-		React.useState<CountryCode>(initialCountryCode);
+		React.useState<CountryCode>(defaultCountry);
 
 	const selectedCountry = countries.find(
 		(country) => country.iso2 === countryCode,
@@ -102,14 +103,32 @@ export function PhoneInput({
 	};
 
 	const handleOnInput = (event: React.FormEvent<HTMLInputElement>) => {
+		asYouType.reset();
+
 		let value = event.currentTarget.value;
 		if (!value.startsWith("+")) {
 			value = `+${value}`;
 		}
+
 		const formattedValue = asYouType.input(value);
 		const number = asYouType.getNumber();
-		setCountryCode(number?.country || "US");
+		setCountryCode(number?.country || defaultCountry);
 		event.currentTarget.value = formattedValue;
+	};
+
+	const handleOnPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+		event.preventDefault();
+		asYouType.reset();
+
+		const clipboardData = event.clipboardData;
+
+		if (clipboardData) {
+			const pastedData = clipboardData.getData("text/plain");
+			const formattedValue = asYouType.input(pastedData);
+			const number = asYouType.getNumber();
+			setCountryCode(number?.country || defaultCountry);
+			event.currentTarget.value = formattedValue;
+		}
 	};
 
 	return (
@@ -136,7 +155,7 @@ export function PhoneInput({
 						<CommandList>
 							<CommandEmpty>No country found.</CommandEmpty>
 							<CommandGroup>
-								<ScrollArea className="h-[280px]">
+								<ScrollArea className="h-full max-h-[280px]">
 									{countries.map((country) => {
 										return (
 											<CommandItem
@@ -159,9 +178,13 @@ export function PhoneInput({
 															: "opacity-0",
 													)}
 												/>
-												<span className="relative top-0.5 mr-2">
-													{country.emoji}
-												</span>
+												<img
+													src={`/flags/${country.iso2.toLowerCase()}.svg`}
+													className="relative top-0.5 mr-2 w-4 h-3 object-cover"
+													aria-labelledby={country.name}
+													title={country.name}
+													alt={country.name}
+												/>
 												{country.name}
 												<span className="text-gray-11 ml-1">
 													(+{country.phone_code})
@@ -184,6 +207,7 @@ export function PhoneInput({
 				placeholder="Phone"
 				defaultValue={initializeDefaultValue()}
 				onInput={handleOnInput}
+				onPaste={handleOnPaste}
 				required={required}
 				aria-required={required}
 				{...rest}
