@@ -61,11 +61,6 @@ export function PhoneInputDefault() {
 				</div>
 				<Separator />
 				<div className="flex gap-2">
-					<p>Type: </p>
-					<span className="font-semibold">{phoneData.type || "-"}</span>
-				</div>
-				<Separator />
-				<div className="flex gap-2">
 					<p className="flex-shrink-0">Possible countries: </p>
 					<span className="font-semibold">
 						{phoneData.possibleCountries || "-"}
